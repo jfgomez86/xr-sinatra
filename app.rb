@@ -22,7 +22,7 @@ get '/:currency' do
   return text_to_img("#{value} #{currency}")
 end
 
-get '/:currency/to/:base' do
+get '/:base/to/:currency' do
   content_type 'image/png'
 
   currency = params['currency']
@@ -35,7 +35,7 @@ get '/:currency/to/:base' do
 end
 
 def text_to_img(text)
-  canvas = Magick::Image.new(420, 100){self.background_color = 'yellow'}
+  canvas = Magick::Image.new(420, 100){self.background_color = 'white'}
   canvas.format = "png"
   gc = Magick::Draw.new
   gc.pointsize(50)
