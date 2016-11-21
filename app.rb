@@ -22,26 +22,35 @@ get '/:currency' do
   return text_to_img("#{value} #{currency}")
 end
 
-get '/:base/to/:currency' do
+get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)} do
   content_type 'image/png'
 
-  currency = params['currency']
-  base = params['base']
-  p [currency, base]
+  if params[:captures].length == 2
+    base, currency = *params[:captures]
+    amount = nil
+  else
+    amount, base, currency = *params[:captures]
+  end
+
   value = convert(currency, base)
+
+  if !amount.nil?
+    value = amount.to_f * value
+  end
 
   return text_to_img("#{value} #{currency}")
 
 end
 
 def text_to_img(text)
-  canvas = Magick::Image.new(420, 100){self.background_color = 'white'}
-  canvas.format = "png"
   gc = Magick::Draw.new
-  gc.pointsize(50)
-  gc.text(30,70, text.center(14))
+  gc.pointsize(30)
+  gc.text(4,30, text)
 
+  canvas = Magick::Image.new((gc.get_type_metrics(text).width * 30/12.0 + 4), 34){self.background_color = 'white'}
+  canvas.format = "png"
   gc.draw(canvas)
+  canvas.write("test.png")
 
   canvas.to_blob
 end
