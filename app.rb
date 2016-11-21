@@ -3,12 +3,13 @@ require 'RMagick'
 require 'json'
 require 'open-uri'
 
+APP_ID = ENV['APP_ID']
 
 get '/:currency' do
   content_type 'image/png'
 
   currency = params['currency']
-  r = open("https://openexchangerates.org/api/latest.json?app_id=2307d50aedb840ae8c0204bfbd0aeb63").read
+  r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
   value = JSON.parse(r)["rates"][currency].round(3)
 
   canvas = Magick::Image.new(420, 100){self.background_color = 'yellow'}
