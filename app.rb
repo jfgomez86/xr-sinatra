@@ -2,6 +2,9 @@ require 'sinatra'
 require 'RMagick'
 require 'json'
 require 'open-uri'
+require 'redis'
+
+Cache = Redis.new
 
 APP_ID = ENV['APP_ID']
 
@@ -81,7 +84,12 @@ def text_to_img(text)
 end
 
 def convert(currency, base="USD")
-  r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
+  if (r = Cache.get('latest-xr')).nil?
+    r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
+    Cache.set('latest-xr', r)
+    Cache.expire('latest-xr', 3600)
+  end
+
   values = JSON.parse(r)["rates"]
   value = (values[currency]/values[base])
 
