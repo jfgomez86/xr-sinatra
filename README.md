@@ -1,19 +1,18 @@
 ### README
 
-XR-Sinatra is a simple currency exchange rate (Base USD *only* for now) API designed to display
-the current exchange rate selected as an image.
+XR-Sinatra is a simple currency exchange rate (Base USD *only* for now) API designed to display the current exchange rate selected as an image.
 
 ## Usage
 
 There are two endpoints currently:
 
-*Get currency exchange with USD base*: Simply visit `/:currency` to receive a PNG image with the data. Example:
+* Get currency exchange with USD base: Simply visit `/:currency` to receive a PNG image with the data. Example:
 
 ```
 GET /COP - 200 OK # returns a image with the value.
 ```
 
-*Get currency exchange with other base*: You can change the base
+* Get currency exchange with other base: You can change the base
 currency used to perform the conversion using `/:base/to/:currency`.
 Example:
 
@@ -23,7 +22,7 @@ GET /EUR/to/COP - 200 OK # returns a image with the value.
 
 Returns the exchange rate for 1 EUR to COP.
 
-*Get currency exchange with other base multiplied by amount*: You can prefix an amount to base and it will multiply the result by that amount `/:amount:base/to/:currency`.
+* Get currency exchange with other base multiplied by amount: You can prefix an amount to base and it will multiply the result by that amount `/:amount:base/to/:currency`.
 Example:
 
 ```
@@ -32,16 +31,16 @@ GET /5EUR/to/COP - 200 OK # returns a image with the value.
 
 Returns the exchange rate for 5 EUR to COP.
 
-*Output text instead of image*: You can add a format suffix to the
+* Output text instead of image: You can add a format suffix to the
 conversion endpoint like so `/:amount:base/to/:currency.txt` to receive
 a formatted text response instead of an image.
 Example:
 
 ```
-GET /5EUR/to/COP.txt - 200 OK # returns a image with the value.
+GET /5EUR/to/COP.txt - 200 OK # returns text with the value.
 ```
 
-Returns the exchange rate for 5 EUR to COP.
+Returns the exchange rate for 5 EUR to COP as a formatted text string.
 
 ## Supported Currencies
 

@@ -15,8 +15,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  rmagick
-  sinatra
+  rmagick (= 2.16.0)
+  sinatra (= 1.4.7)
+
+RUBY VERSION
+   ruby 2.3.1p112
 
 BUNDLED WITH
-   1.10.6
+   1.13.6
