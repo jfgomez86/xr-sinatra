@@ -13,18 +13,19 @@ get '/favicon.*' do
   return 200
 end
 
+# TODO: add format parameter to enable other formats response. Will surely
+# require a refactor.
 get '/:currency' do
   content_type 'image/png'
 
   currency = params['currency']
   value = convert(currency)
+  formatted_text = format_text(value, currency)
 
-  return text_to_img("#{value} #{currency}")
+  return text_to_img(formatted_text)
 end
 
-get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)} do
-  content_type 'image/png'
-
+get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.txt+)?} do
   if params[:captures].length == 2
     base, currency = *params[:captures]
     amount = nil
@@ -38,8 +39,23 @@ get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)} do
     value = (amount.to_f * value)
   end
 
-  return text_to_img("#{format_number(value.round(2))} #{currency}")
+  formatted_text = format_text(value, currency)
 
+  case params[:captures][3]
+  when '.txt'
+    content_type 'text/plain'
+
+    return formatted_text
+  else
+    content_type 'image/png'
+
+    return text_to_img(formatted_text)
+  end
+
+end
+
+def format_text(value, currency)
+  "#{format_number(value.round(2))} #{currency}"
 end
 
 def format_number(number)
@@ -60,7 +76,6 @@ def text_to_img(text)
   canvas = Magick::Image.new((gc.get_type_metrics(text).width * pointsize/default_pointsize + 4), 34){self.background_color = 'white'}
   canvas.format = "png"
   gc.draw(canvas)
-  canvas.write("test.png")
 
   canvas.to_blob
 end

@@ -32,6 +32,17 @@ GET /5EUR/to/COP - 200 OK # returns a image with the value.
 
 Returns the exchange rate for 5 EUR to COP.
 
+*Output text instead of image*: You can add a format suffix to the
+conversion endpoint like so `/:amount:base/to/:currency.txt` to receive
+a formatted text response instead of an image.
+Example:
+
+```
+GET /5EUR/to/COP.txt - 200 OK # returns a image with the value.
+```
+
+Returns the exchange rate for 5 EUR to COP.
+
 ## Supported Currencies
 
 This app connects to [OXR](https://docs.openexchangerates.org/docs/supported-currencies). It supports the same supported currency rates:
