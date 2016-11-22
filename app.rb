@@ -1,11 +1,15 @@
-require 'sinatra'
-require 'RMagick'
 require 'json'
-require 'open-uri'
-require 'redis'
+require 'bundler/setup'
+
+Bundler.require(:default, (ENV['RACK_ENV'] || 'development').to_sym)
+
+configure(:development) do
+  # Loading Environment vars in development
+  require 'dotenv'
+  Dotenv.load
+end
 
 Cache = Redis.new
-
 APP_ID = ENV['APP_ID']
 
 get '/' do
