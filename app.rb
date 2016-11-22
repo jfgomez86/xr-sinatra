@@ -35,10 +35,10 @@ get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)} do
   value = convert(currency, base)
 
   if !amount.nil?
-    value = (amount.to_f * value).round(2)
+    value = (amount.to_f * value)
   end
 
-  return text_to_img("#{format_number(value)} #{currency}")
+  return text_to_img("#{format_number(value.round(2))} #{currency}")
 
 end
 
