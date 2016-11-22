@@ -23,6 +23,15 @@ GET /EUR/to/COP - 200 OK # returns a image with the value.
 
 Returns the exchange rate for 1 EUR to COP.
 
+*Get currency exchange with other base multiplied by amount*: You can prefix an amount to base and it will multiply the result by that amount `/:amount:base/to/:currency`.
+Example:
+
+```
+GET /5EUR/to/COP - 200 OK # returns a image with the value.
+```
+
+Returns the exchange rate for 5 EUR to COP.
+
 ## Supported Currencies
 
 This app connects to [OXR](https://docs.openexchangerates.org/docs/supported-currencies). It supports the same supported currency rates:
