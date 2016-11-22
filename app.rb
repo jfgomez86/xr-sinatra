@@ -35,19 +35,29 @@ get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)} do
   value = convert(currency, base)
 
   if !amount.nil?
-    value = (amount.to_f * value).round(3)
+    value = (amount.to_f * value).round(2)
   end
 
-  return text_to_img("#{value} #{currency}")
+  return text_to_img("#{format_number(value)} #{currency}")
 
+end
+
+def format_number(number)
+  parts = number.to_s.split('.')
+  parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1,")
+  parts.join('.')
 end
 
 def text_to_img(text)
   gc = Magick::Draw.new
-  gc.pointsize(30)
-  gc.text(4,30, text)
+  default_pointsize = 12.0
+  pointsize = 30.0
+  initial_position = [4,30]
 
-  canvas = Magick::Image.new((gc.get_type_metrics(text).width * 30/12.0 + 4), 34){self.background_color = 'white'}
+  gc.pointsize(pointsize)
+  gc.text(*initial_position, text)
+
+  canvas = Magick::Image.new((gc.get_type_metrics(text).width * pointsize/default_pointsize + 4), 34){self.background_color = 'white'}
   canvas.format = "png"
   gc.draw(canvas)
   canvas.write("test.png")
@@ -58,7 +68,7 @@ end
 def convert(currency, base="USD")
   r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
   values = JSON.parse(r)["rates"]
-  value = (values[currency]/values[base]).round(3)
+  value = (values[currency]/values[base])
 
   return value
 end
