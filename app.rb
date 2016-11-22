@@ -1,5 +1,6 @@
 require 'open-uri'
 require 'json'
+require 'erb'
 require 'bundler/setup'
 
 Bundler.require(:default, (ENV['RACK_ENV'] || 'development').to_sym)
@@ -33,7 +34,7 @@ get '/:currency' do
   return text_to_img(formatted_text)
 end
 
-get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.txt+)?} do
+get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.(txt|html)+)?} do
   if params[:captures].length == 2
     base, currency = *params[:captures]
     amount = nil
@@ -47,17 +48,18 @@ get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.txt+)?} do
     value = (amount.to_f * value)
   end
 
-  formatted_text = format_text(value, currency)
+  @formatted_text = format_text(value, currency)
 
   case params[:captures][3]
   when '.txt'
     content_type 'text/plain'
-
-    return formatted_text
+    return @formatted_text
+  when '.html'
+    content_type 'text/html'
+    erb :convert
   else
     content_type 'image/png'
-
-    return text_to_img(formatted_text)
+    return text_to_img(@formatted_text)
   end
 
 end

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es-ES" prefix="og: http://ogp.me/ns#">
+  <head>
+    <title><%= @formatted_text %></title>
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="<%= @formatted_text %>" />
+    <meta property="og:description" content="This project is Open source: https://github.com/jfgomez86/xr-sinatra" />
+    <meta property="og:site_name" content="XR-Sinatra" />
+    <meta property="og:updated_time" content="<%= DateTime.now.to_s %>" />
+  </head>
+  <body>
+    <%= @formatted_text %>
+  </body>
+</html>
