@@ -1,104 +1,110 @@
-require 'open-uri'
-require 'json'
-require 'erb'
-require 'bundler/setup'
+# @version 1.0
+class App < Sinatra::Base
+  register Sinatra::Namespace
 
-Bundler.require(:default, (ENV['RACK_ENV'] || 'development').to_sym)
-
-configure(:development) do
-  # Loading Environment vars in development
-  require 'dotenv'
-  Dotenv.load
-end
-
-Cache = Redis.new
-APP_ID = ENV['APP_ID']
-
-get '/' do
-  return 200
-end
-
-get '/favicon.*' do
-  return 200
-end
-
-# TODO: add format parameter to enable other formats response. Will surely
-# require a refactor.
-get '/:currency' do
-  content_type 'image/png'
-
-  currency = params['currency']
-  value = convert(currency)
-  formatted_text = format_text(value, currency)
-
-  return text_to_img(formatted_text)
-end
-
-get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.(txt|html)+)?} do
-  if params[:captures].length == 2
-    base, currency = *params[:captures]
-    amount = nil
-  else
-    amount, base, currency = *params[:captures]
+  get '/' do
+    return 200
   end
 
-  value = convert(currency, base)
-
-  if !amount.nil?
-    value = (amount.to_f * value)
+  get '/favicon.*' do
+    return 200
   end
 
-  @formatted_text = format_text(value, currency)
-
-  case params[:captures][3]
-  when '.txt'
-    content_type 'text/plain'
-    return @formatted_text
-  when '.html'
-    content_type 'text/html'
-    erb :convert
-  else
+  # TODO: add format parameter to enable other formats response. Will surely
+  # require a refactor.
+  get '/:currency' do
     content_type 'image/png'
-    return text_to_img(@formatted_text)
+
+    currency = params['currency']
+    value = convert(currency)
+    formatted_text = format_text(value, currency)
+
+    return text_to_img(formatted_text)
   end
 
-end
+  get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.(txt|html)+)?} do
+    if params[:captures].length == 2
+      base, currency = *params[:captures]
+      amount = nil
+    else
+      amount, base, currency = *params[:captures]
+    end
 
-def format_text(value, currency)
-  "#{format_number(value.round(2))} #{currency}"
-end
+    value = convert(currency, base)
 
-def format_number(number)
-  parts = number.to_s.split('.')
-  parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1,")
-  parts.join('.')
-end
+    if !amount.nil?
+      value = (amount.to_f * value)
+    end
 
-def text_to_img(text)
-  gc = Magick::Draw.new
-  default_pointsize = 12.0
-  pointsize = 30.0
-  initial_position = [4,30]
+    @formatted_text = format_text(value, currency)
 
-  gc.pointsize(pointsize)
-  gc.text(*initial_position, text)
+    case params[:captures][3]
+    when '.txt'
+      content_type 'text/plain'
+      return @formatted_text
+    when '.html'
+      content_type 'text/html'
+      erb :convert
+    else
+      content_type 'image/png'
+      return text_to_img(@formatted_text)
+    end
 
-  canvas = Magick::Image.new((gc.get_type_metrics(text).width * pointsize/default_pointsize + 4), 34){self.background_color = 'white'}
-  canvas.format = "png"
-  gc.draw(canvas)
+  end
+  # /api/v1/exchange
+  namespace '/api/v1' do
 
-  canvas.to_blob
-end
+    before do
+      content_type 'application/json'
+    end
 
-def convert(currency, base="USD")
-  if (r = Cache.get('latest-xr')).nil?
-    r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
-    Cache.set('latest-xr', r)
-    Cache.expire('latest-xr', 3600)
+    get '/' do
+      return 200
+    end
+
+    get "/welcome" do
+      halt 200, {'Content-Type' => 'application/json'}, { message:"welcome to integration xr-sinatra" }.to_json
+    end
+    # Helpers block will be here
+    # HTTP post endpoint block will be here
+  end
+  # Methods
+  def format_text(value, currency)
+    "#{format_number(value.round(2))} #{currency}"
   end
 
-  values = JSON.parse(r)["rates"]
-  value = (values[currency]/values[base])
+  def format_number(number)
+    parts = number.to_s.split('.')
+    parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1,")
+    parts.join('.')
+  end
 
-  return value
+  def text_to_img(text)
+    gc = Magick::Draw.new
+    default_pointsize = 12.0
+    pointsize = 30.0
+    initial_position = [4,30]
+
+    gc.pointsize(pointsize)
+    gc.text(*initial_position, text)
+
+    canvas = Magick::Image.new((gc.get_type_metrics(text).width * pointsize/default_pointsize + 4), 34){self.background_color = 'white'}
+    canvas.format = "png"
+    gc.draw(canvas)
+
+    canvas.to_blob
+  end
+
+  def convert(currency, base="USD")
+    if (r = Cache.get('latest-xr')).nil?
+      r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
+      Cache.set('latest-xr', r)
+      Cache.expire('latest-xr', 3600)
+    end
+
+    values = JSON.parse(r)["rates"]
+    value = (values[currency]/values[base])
+
+    return value
+  end
 end
