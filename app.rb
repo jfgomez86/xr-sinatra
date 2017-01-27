@@ -1,3 +1,6 @@
+require_relative 'models/currency'
+require_relative 'utils/currency_utils'
+require_relative 'service/currency_exchange_service'
 # @version 1.0
 class App < Sinatra::Base
   register Sinatra::Namespace
@@ -16,95 +19,125 @@ class App < Sinatra::Base
     content_type 'image/png'
 
     currency = params['currency']
-    value = convert(currency)
-    formatted_text = format_text(value, currency)
+    value = CurrencyExchangeService.convert(currency)
 
-    return text_to_img(formatted_text)
+    if value.nil?
+      status 404
+      content_type 'image/png'
+      return text_to_img("not found this currency with code: #{currency}")
+    end
+
+    formatted_text = CurrencyUtils.format_text(value, currency)
+
+    return CurrencyUtils.text_to_img(formatted_text)
   end
 
-  get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.(txt|html)+)?} do
-    if params[:captures].length == 2
-      base, currency = *params[:captures]
-      amount = nil
-    else
-      amount, base, currency = *params[:captures]
-    end
+  get %r{/([0-9.]+)?([^\/?#\.]+)/to/([^\/?#\.]+)(\.(txt|html|json)+)?} do
+  if params[:captures].length == 2
+    base, currency = *params[:captures]
+    amount = nil
+  else
+    amount, base, currency = *params[:captures]
+  end
 
-    value = convert(currency, base)
+  value = CurrencyExchangeService.convert(currency, base)
 
-    if !amount.nil?
-      value = (amount.to_f * value)
-    end
-
-    @formatted_text = format_text(value, currency)
-
+  if value.nil?
+    code=404
+    @message="not found currency code: #{currency} and base code: #{base}"
     case params[:captures][3]
     when '.txt'
+      status code
       content_type 'text/plain'
-      return @formatted_text
+      return @message
     when '.html'
+      status code
       content_type 'text/html'
-      erb :convert
+      erb :error and return @message
+    when '.json'
+      halt code, { 'Content-Type' => 'application/json' }, { message:@message }.to_json
     else
+      status code
       content_type 'image/png'
-      return text_to_img(@formatted_text)
+      return CurrencyUtils.text_to_img(@message)
+    end
+  end
+
+  if !amount.nil?
+    value = (amount.to_f * value)
+  end
+
+  @formatted_text = CurrencyUtils.format_text(value, currency)
+
+  case params[:captures][3]
+  when '.txt'
+    content_type 'text/plain'
+    return @formatted_text
+  when '.html'
+    content_type 'text/html'
+    erb :convert
+  when '.json'
+    message = ''
+    if !amount.nil?
+      formatted_base = CurrencyUtils.format_text(amount.to_f, base)
+      formatted_to = CurrencyUtils.format_text(value, currency)
+      message = "$#{formatted_base} would be $#{formatted_to}"
+    else
+      formatted_text = CurrencyUtils.format_text(value, currency)
+      message = "It is $#{formatted_text} per #{base}"
+    end
+    halt 200, {'Content-Type' => 'application/json'}, { message:message }.to_json
+  else
+    content_type 'image/png'
+    return CurrencyUtils.text_to_img(@formatted_text)
+  end
+end
+# /api/v1/exchange
+namespace '/api/v1' do
+
+  before do
+    content_type 'application/json'
+  end
+
+  helpers do
+    def currency_params
+      begin
+        json_object = JSON.parse(request.body.read)
+        require_root(json_object.keys.join(''), 'currency')
+        json_object['currency']
+      rescue
+        halt 400, {'Content-Type' => 'application/json'}, { message: 'Invalid JSON' }.to_json
+      end
     end
 
-  end
-  # /api/v1/exchange
-  namespace '/api/v1' do
-
-    before do
-      content_type 'application/json'
+    def require_root(entry_key, root_name)
+      halt 400, {'Content-Type' => 'application/json'}, { message: 'Invalid JSON' }.to_json if entry_key!=root_name
     end
+  end
 
-    get '/' do
-      return 200
+  post "/exchange" do
+    currency = Currency.new(currency_params)
+    value = CurrencyExchangeService.convert(currency.to, currency.base)
+    if currency.valid? && value
+      code = 200
+      if !currency.amount.blank?
+        value = (currency.amount.to_f * value)
+        formatted_base = CurrencyUtils.format_text(currency.amount.to_f, currency.base)
+        formatted_to = CurrencyUtils.format_text(value, currency.to)
+        message = "$#{formatted_base} would be $#{formatted_to}"
+      else
+        formatted_text = CurrencyUtils.format_text(value, currency.to)
+        message = "It is $#{formatted_text} per #{currency.base}"
+      end
+    elsif currency.errors.blank?
+      code = 404
+      message = "not found currency code: #{currency.to} and base code: #{currency.base}"
+    else
+      code = 422
+      message = currency.errors.full_messages.flatten
     end
-
-    get "/welcome" do
-      halt 200, {'Content-Type' => 'application/json'}, { message:"welcome to integration xr-sinatra" }.to_json
-    end
-    # Helpers block will be here
-    # HTTP post endpoint block will be here
+    halt code, {'Content-Type' => 'application/json'}, { message:message }.to_json
   end
-  # Methods
-  def format_text(value, currency)
-    "#{format_number(value.round(2))} #{currency}"
-  end
+end
 
-  def format_number(number)
-    parts = number.to_s.split('.')
-    parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1,")
-    parts.join('.')
-  end
-
-  def text_to_img(text)
-    gc = Magick::Draw.new
-    default_pointsize = 12.0
-    pointsize = 30.0
-    initial_position = [4,30]
-
-    gc.pointsize(pointsize)
-    gc.text(*initial_position, text)
-
-    canvas = Magick::Image.new((gc.get_type_metrics(text).width * pointsize/default_pointsize + 4), 34){self.background_color = 'white'}
-    canvas.format = "png"
-    gc.draw(canvas)
-
-    canvas.to_blob
-  end
-
-  def convert(currency, base="USD")
-    if (r = Cache.get('latest-xr')).nil?
-      r = open("https://openexchangerates.org/api/latest.json?app_id=#{APP_ID}").read
-      Cache.set('latest-xr', r)
-      Cache.expire('latest-xr', 3600)
-    end
-
-    values = JSON.parse(r)["rates"]
-    value = (values[currency]/values[base])
-
-    return value
-  end
 end

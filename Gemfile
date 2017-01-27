@@ -9,6 +9,12 @@ github 'sinatra/sinatra' do
   gem 'sinatra-contrib'
 end
 
+#active model
+gem 'activemodel'
+gem 'activerecord'
+gem 'activesupport'
+gem 'virtus'
+
 gem 'redis', '3.3.2'
 gem 'foreman', '0.82.0'
 # tasks

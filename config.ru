@@ -7,11 +7,12 @@ require "sinatra/namespace"
 require "pry"
 
 Bundler.require(:default, (ENV['RACK_ENV'] || 'development').to_sym)
-configure(:development) do
+configure(:development, :test) do
   # Loading Environment vars in development
   require 'dotenv'
   Dotenv.load
 end
+
 Cache = Redis.new
 APP_ID = ENV['APP_ID']
 root = File.expand_path File.dirname(__FILE__)

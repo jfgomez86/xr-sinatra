@@ -20,13 +20,37 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    activemodel (5.0.0.1)
+      activesupport (= 5.0.0.1)
+    activerecord (5.0.0.1)
+      activemodel (= 5.0.0.1)
+      activesupport (= 5.0.0.1)
+      arel (~> 7.0)
+    activesupport (5.0.0.1)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (~> 0.7)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
     ansi (1.5.0)
+    arel (7.1.4)
+    axiom-types (0.1.1)
+      descendants_tracker (~> 0.0.4)
+      ice_nine (~> 0.11.0)
+      thread_safe (~> 0.3, >= 0.3.1)
     backports (3.6.8)
     builder (3.2.2)
     coderay (1.1.1)
+    coercible (1.0.0)
+      descendants_tracker (~> 0.0.1)
+    concurrent-ruby (1.0.2)
+    descendants_tracker (0.0.4)
+      thread_safe (~> 0.3, >= 0.3.1)
     dotenv (2.1.2)
+    equalizer (0.0.11)
     foreman (0.82.0)
       thor (~> 0.19.1)
+    i18n (0.7.0)
+    ice_nine (0.11.2)
     method_source (0.8.2)
     minitest (5.10.1)
     minitest-matchers (1.4.1)
@@ -51,13 +75,24 @@ GEM
     ruby-progressbar (1.8.1)
     slop (3.6.0)
     thor (0.19.4)
+    thread_safe (0.3.5)
     tilt (2.0.5)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
     valid_attribute (2.0.0)
+    virtus (1.0.5)
+      axiom-types (~> 0.1)
+      coercible (~> 1.0)
+      descendants_tracker (~> 0.0, >= 0.0.3)
+      equalizer (~> 0.0, >= 0.0.9)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  activemodel
+  activerecord
+  activesupport
   dotenv (~> 2.1, >= 2.1.1)
   foreman (= 0.82.0)
   minitest
@@ -71,6 +106,7 @@ DEPENDENCIES
   sinatra
   sinatra-contrib!
   valid_attribute
+  virtus
 
 RUBY VERSION
    ruby 2.3.1p112
