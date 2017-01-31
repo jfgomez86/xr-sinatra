@@ -8,3 +8,5 @@ require 'minitest/spec'
 require 'rack/test'
 require 'valid_attribute'
 require 'minitest/matchers'
+require 'virtus'
+require "pry"
