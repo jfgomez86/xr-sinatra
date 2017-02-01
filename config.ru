@@ -4,7 +4,6 @@ require 'erb'
 require 'bundler/setup'
 require "sinatra/base"
 require "sinatra/namespace"
-require "pry"
 
 Bundler.require(:default, (ENV['RACK_ENV'] || 'development').to_sym)
 configure(:development, :test) do
