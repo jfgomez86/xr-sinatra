@@ -24,7 +24,7 @@ class App < Sinatra::Base
     if value.nil?
       status 404
       content_type 'image/png'
-      return text_to_img("not found this currency with code: #{currency}")
+      return text_to_img("Not found this currency with code: #{currency}.")
     end
 
     formatted_text = CurrencyUtils.format_text(value, currency)
@@ -43,8 +43,8 @@ class App < Sinatra::Base
   value = CurrencyExchangeService.convert(currency, base)
 
   if value.nil?
-    code=404
-    @message="not found currency code: #{currency} and base code: #{base}"
+    code = 404
+    @message = "Not found currency code: #{currency} and base code: #{base}."
     case params[:captures][3]
     when '.txt'
       status code
@@ -55,7 +55,7 @@ class App < Sinatra::Base
       content_type 'text/html'
       erb :error and return @message
     when '.json'
-      halt code, { 'Content-Type' => 'application/json' }, { message:@message }.to_json
+      halt code, { 'Content-Type' => 'application/json' }, { message: "I couldn't find that currency or that value is not allowed." }.to_json
     else
       status code
       content_type 'image/png'
